@@ -1,74 +1,67 @@
 <template>
-  <div class="container">
+  <div>
     <table>
-      <tr v-for="row in rows" :key="row">
-        <td v-for="column in columns" :key="column">
-          <button v-bind:class="{'selected': isSelected(row, column)}" v-bind:value="getValue(row, column)" v-on:click="selectButton(row, column)">
-            {{ getValue(row, column) }}
-          </button>
+      <tr v-for="i in 4" :key="i">
+        <td v-for="j in 10" :key="10*(i-1)+j">
+          <button :class="{ selected: isSelected(10*(i-1)+j) }" @click="selectButton(10*(i-1)+j)">{{ 10*(i-1)+j }}</button>
         </td>
       </tr>
     </table>
-    <button v-on:click="submitSelection" :disabled="selectedButtons.length === 0 || selectedButtons.length > 10">Submit Selection</button>
+    <button @click="submitSelection" :disabled="selectedButtons.length === 0">Submit Selection</button>
+    <div v-if="win">
+      <h2>You win {{ win }}</h2>
+    </div>
   </div>
 </template>
 
 <script>
 export default {
-  name: "App",
   data() {
     return {
-      rows: 10,
-      columns: 4,
-      selectedButtons: []
-    };
+      buttons: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40],
+      selectedButtons: [],
+      win: null
+    }
   },
   methods: {
-    getValue(row, column) {
-      return (row - 1) * this.columns + column;
-    },
-    isSelected(row, column) {
-      return this.selectedButtons.includes(this.getValue(row, column));
-    },
-    selectButton(row, column) {
-      const value = this.getValue(row, column);
-      if (this.isSelected(row, column)) {
-        this.selectedButtons = this.selectedButtons.filter((button) => button !== value);
-      } else if (this.selectedButtons.length < 10){
+    selectButton(value) {
+      if (this.selectedButtons.includes(value)) {
+        this.selectedButtons.splice(this.selectedButtons.indexOf(value), 1);
+      } else if (this.selectedButtons.length < 10) {
         this.selectedButtons.push(value);
       }
     },
+    isSelected(value) {
+      return this.selectedButtons.includes(value);
+    },
     submitSelection() {
-      // Send post request with selected buttons data
-      console.log("Selected buttons:", this.selectedButtons);
-      this.selectedButtons = [];
+      if (this.selectedButtons.length > 0) {
+        const data = JSON.stringify({ selectedButtons: this.selectedButtons });
+        fetch('http://127.0.0.1:8080/crypto', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: data
+        })
+        .then(response => {
+          if (response.ok) {
+            return response.json();
+          }
+          throw new Error('Network response was not ok.');
+        })
+        .then(json => {
+          console.log('Response:', json);
+          this.win = json.win;
+          this.selectedButtons = [];
+        })
+        .catch(error => console.error('Error:', error));
+      }
     }
   }
-};
+}
 </script>
 
 <style>
-table {
-  border-collapse: collapse;
-}
-td {
-  border: 1px solid black;
-  padding: 5px;
-}
-button {
-  width: 100%;
-  height: 100%;
-  background-color: white;
-  border: none;
-  font-size: 14px;
-}
-button:hover {
-  background-color: lightgray;
-}
-button.selected {
+.selected {
   background-color: yellow;
-}
-.container {
-  margin: 20px;
 }
 </style>
