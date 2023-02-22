@@ -58,7 +58,7 @@ export default {
         method: "POST",
         body: JSON.stringify(data),
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "text/plain; charset=utf-8",
         },
         credentials: "include", // 加入這個屬性
       })
